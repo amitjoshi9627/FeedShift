@@ -1,0 +1,8 @@
+from src.config.paths import ROOT_DIR
+
+MODEL_DIR = ROOT_DIR / ".model_cache"
+
+EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL_SAVED_NAME = "Sentence Transformer"
+EMBEDDING_MODEL_PATH = MODEL_DIR / EMBEDDING_MODEL_SAVED_NAME
+EMBEDDING_MODEL_BATCH_SIZE = 16
