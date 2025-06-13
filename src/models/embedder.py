@@ -5,11 +5,20 @@ import numpy as np
 import torch
 from sentence_transformers import SentenceTransformer
 
-from src.models.constants import EMBEDDING_MODEL_PATH, EMBEDDING_MODEL_NAME, MODEL_DIR, EMBEDDING_MODEL_BATCH_SIZE
+from src.models.constants import (
+    EMBEDDING_MODEL_BATCH_SIZE,
+    EMBEDDING_MODEL_NAME,
+    EMBEDDING_MODEL_PATH,
+    MODEL_DIR,
+)
 
 
 class FeedShiftEmbeddor:
-    def __init__(self, model_name: str = EMBEDDING_MODEL_NAME, model_path: str | Path = EMBEDDING_MODEL_PATH) -> None:
+    def __init__(
+        self,
+        model_name: str = EMBEDDING_MODEL_NAME,
+        model_path: str | Path = EMBEDDING_MODEL_PATH,
+    ) -> None:
         self.model_name = model_name
         self.model_path = model_path
         self.device = self._detect_device()
@@ -37,11 +46,15 @@ class FeedShiftEmbeddor:
         os.makedirs(MODEL_DIR, exist_ok=True)
         model.save(str(self.model_path))
 
-    def encode(self, sentences: str | list[str], batch_size: int = EMBEDDING_MODEL_BATCH_SIZE) -> np.ndarray:
+    def encode(
+        self, sentences: str | list[str], batch_size: int = EMBEDDING_MODEL_BATCH_SIZE
+    ) -> np.ndarray:
         if isinstance(sentences, str):
             sentences = [sentences]
         with torch.inference_mode():
-            embeddings = self.model.encode(sentences, batch_size=batch_size, device=self.device)
+            embeddings = self.model.encode(
+                sentences, batch_size=batch_size, device=self.device
+            )
         return embeddings
 
     def __call__(self, *args, **kwargs):

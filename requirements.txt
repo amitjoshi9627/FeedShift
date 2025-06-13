@@ -1,4 +1,6 @@
 pandas>=2.2.3
 numpy>=2.0.1
-torch>=2.7.0
+torch>=2.7.1
 scikit-learn>=1.6.1
+detoxify>=0.5.2
+reflex==0.7.12

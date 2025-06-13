@@ -1,11 +1,10 @@
-import pdb
 from typing import Optional
 
 import pandas as pd
 
 from src.config.paths import RAW_DATA
 from src.data.preprocessing import FeedShiftPreprocessor
-from src.utils.tools import save_csv, load_csv
+from src.utils.tools import load_csv, save_csv
 
 
 class FeedShiftDataLoader:
@@ -20,5 +19,3 @@ class FeedShiftDataLoader:
     def processed_data(self) -> pd.DataFrame:
         self.data = self.preprocessor.process_data(self.raw_data)
         return self.data
-
-

@@ -20,5 +20,3 @@ class FeedShiftPreprocessor:
     @staticmethod
     def _remove_duplicates(data: pd.DataFrame) -> pd.DataFrame:
         return data.drop_duplicates(subset=[DataCols.TEXT])
-
-

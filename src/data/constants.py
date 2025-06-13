@@ -10,4 +10,3 @@ class DataCols:
     SCORES = "scores"
     AUTHOR = "author"
     POST_ID = "post_id"
-
