@@ -1,7 +1,5 @@
 import io
-import time
 import asyncio
-from typing import Optional
 
 import pandas as pd
 import reflex as rx
@@ -42,15 +40,17 @@ class FeedShiftState(rx.State):
 
         try:
             file = files[0]
-            if file.name.endswith('.csv'):
+            if file.name.endswith(".csv"):
                 content = await file.read()
-                self.data = pd.read_csv(io.StringIO(content.decode('utf-8')))
+                self.data = pd.read_csv(io.StringIO(content.decode("utf-8")))
                 self.uploaded_content = self.data.head().to_markdown()
 
                 if self.data is not None:
                     self.file_upload = True
-                    self.ranked_data = get_recommended_posts(self.data, self.toxicity_strictness)
-                    self.ranked_posts = self.ranked_data.to_dict('records')
+                    self.ranked_data = get_recommended_posts(
+                        self.data, self.toxicity_strictness
+                    )
+                    self.ranked_posts = self.ranked_data.to_dict("records")
                     self._last_processed_value = self.toxicity_strictness
         except Exception as e:
             print(f"Error uploading file: {e}")
@@ -98,8 +98,10 @@ class FeedShiftState(rx.State):
 
         try:
             # Perform the actual processing
-            self.ranked_data = get_recommended_posts(self.data, self.toxicity_strictness)
-            self.ranked_posts = self.ranked_data.to_dict('records')
+            self.ranked_data = get_recommended_posts(
+                self.data, self.toxicity_strictness
+            )
+            self.ranked_posts = self.ranked_data.to_dict("records")
             self._last_processed_value = self.toxicity_strictness
         except Exception as e:
             print(f"Error updating recommendations: {e}")
@@ -113,7 +115,7 @@ class FeedShiftState(rx.State):
 
 
 def get_recommended_posts(
-        data: pd.DataFrame, toxicity_strictness: float
+    data: pd.DataFrame, toxicity_strictness: float
 ) -> pd.DataFrame:
     engine = FeedShiftEngine(data)
     ranked_data = engine.run(toxicity_strictness).head(10)
@@ -246,7 +248,9 @@ def process_button():
                             align="center",
                         ),
                     ),
-                    on_click=FeedShiftState.handle_upload(rx.upload_files("file_upload")),
+                    on_click=FeedShiftState.handle_upload(
+                        rx.upload_files("file_upload")
+                    ),
                     color_scheme="purple",
                     size="3",
                     width="200px",
@@ -255,7 +259,7 @@ def process_button():
                     _hover={"cursor": "pointer"},
                 ),
                 rx.fragment(),
-            )
+            ),
         ),
         width="100%",
     )
@@ -310,8 +314,8 @@ def post_card(post, index):
                         rx.cond(
                             post.get("created_at"),
                             post.get("created_at"),
-                            "No timestamp"
-                        )
+                            "No timestamp",
+                        ),
                     ),
                     color="var(--gray-11)",
                     font_size="0.9em",
@@ -327,11 +331,9 @@ def post_card(post, index):
                         post.get("text"),
                         post.get("text"),
                         rx.cond(
-                            post.get("body"),
-                            post.get("body"),
-                            "No content available"
-                        )
-                    )
+                            post.get("body"), post.get("body"), "No content available"
+                        ),
+                    ),
                 ),
                 color="var(--gray-12)",
                 line_height="1.5",
@@ -344,8 +346,8 @@ def post_card(post, index):
                         rx.cond(
                             post.get("ranking_score"),
                             f"Score: {post.get('ranking_score')}",
-                            "Score: N/A"
-                        )
+                            "Score: N/A",
+                        ),
                     ),
                     font_weight="600",
                     color="var(--purple-11)",
@@ -362,9 +364,9 @@ def post_card(post, index):
                             rx.cond(
                                 post.get("user"),
                                 f"Author: {post.get('user')}",
-                                "Author: Unknown"
-                            )
-                        )
+                                "Author: Unknown",
+                            ),
+                        ),
                     ),
                     color="var(--gray-10)",
                     font_size="0.8em",
@@ -423,10 +425,7 @@ def results_section():
                         ~FeedShiftState.is_processing,
                         rx.scroll_area(
                             rx.vstack(
-                                rx.foreach(
-                                    FeedShiftState.ranked_posts,
-                                    post_card
-                                ),
+                                rx.foreach(FeedShiftState.ranked_posts, post_card),
                                 spacing="2",
                                 width="100%",
                             ),
