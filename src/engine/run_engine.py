@@ -12,12 +12,14 @@ class FeedShiftEngine:
         self.data_loader = FeedShiftDataLoader(data)
 
     def run(
-        self, toxicity_strictness: float = DEFAULT_TOXICITY_STRICTNESS
+        self,
+        interests: list[str],
+        toxicity_strictness: float = DEFAULT_TOXICITY_STRICTNESS,
     ) -> pd.DataFrame:
         text_ranker = FeedShiftTextRanker(self.data_loader.processed_data)
-        return text_ranker.rerank()
+        return text_ranker.rerank(interests, toxicity_strictness)
 
 
 if __name__ == "__main__":
     engine = FeedShiftEngine()
-    print(engine.run().head())
+    print(engine.run(interests=[]).head())
