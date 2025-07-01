@@ -46,15 +46,11 @@ class FeedShiftEmbeddor:
         os.makedirs(MODEL_DIR, exist_ok=True)
         model.save(str(self.model_path))
 
-    def encode(
-        self, sentences: str | list[str], batch_size: int = EMBEDDING_MODEL_BATCH_SIZE
-    ) -> np.ndarray:
+    def encode(self, sentences: str | list[str], batch_size: int = EMBEDDING_MODEL_BATCH_SIZE) -> np.ndarray:
         if isinstance(sentences, str):
             sentences = [sentences]
         with torch.inference_mode():
-            embeddings = self.model.encode(
-                sentences, batch_size=batch_size, device=self.device
-            )
+            embeddings = self.model.encode(sentences, batch_size=batch_size, device=self.device)
         return embeddings
 
     def __call__(self, *args, **kwargs):

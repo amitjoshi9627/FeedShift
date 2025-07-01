@@ -33,9 +33,7 @@ class FeedShiftDetoxified:
             texts = [texts]
         if self.model:
             try:
-                score = np.max(
-                    np.column_stack(list(self.model.predict(texts).values())), axis=1
-                ).reshape(-1, 1)
+                score = np.max(np.column_stack(list(self.model.predict(texts).values())), axis=1).reshape(-1, 1)
             except DetoxifyModelError:
                 score = np.array([self._is_toxic_regex(text) for text in texts])
         else:

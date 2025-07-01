@@ -51,10 +51,7 @@ with st.container():
 
 
 if uploaded_file:
-    if (
-        "uploaded_file_name" in st.session_state
-        and uploaded_file.name != st.session_state["uploaded_file_name"]
-    ):
+    if "uploaded_file_name" in st.session_state and uploaded_file.name != st.session_state["uploaded_file_name"]:
         st.session_state[RECOMMEND_POST_BUTTON] = False
         st.session_state["uploaded_file_name"] = uploaded_file.name
     elif "uploaded_file_name" not in st.session_state:
@@ -76,9 +73,7 @@ if uploaded_file:
 
 
 @st.cache_resource
-def get_recommended_posts(
-    data: pd.DataFrame, toxicity_strictness: float
-) -> pd.DataFrame:
+def get_recommended_posts(data: pd.DataFrame, toxicity_strictness: float) -> pd.DataFrame:
     with st.spinner("🎩 Abra-Ka-Dabra ..."):
         engine = FeedShiftEngine(data)
         ranked_data = engine.run(toxicity_strictness).head(10)
@@ -98,9 +93,7 @@ def run():
                 st.rerun()
 
         if st.session_state.get(RECOMMEND_POST_BUTTON, False):
-            ranked_data = get_recommended_posts(
-                data, st.session_state[TOXICITY_STRICTNESS]
-            )
+            ranked_data = get_recommended_posts(data, st.session_state[TOXICITY_STRICTNESS])
             st.markdown("---")
             st.subheader("🔝 Top 10 Recommended Posts", divider="rainbow")
             st.markdown("")
@@ -112,9 +105,7 @@ def run():
                     col_content, col_likes, col_score = st.columns([8, 1, 1])
 
                     with col_content:
-                        st.markdown(
-                            f"👤 **{row[DataCols.AUTHOR]}**", unsafe_allow_html=True
-                        )
+                        st.markdown(f"👤 **{row[DataCols.AUTHOR]}**", unsafe_allow_html=True)
                         st.markdown(
                             f"🕒 {row[DataCols.TIMESTAMP][:10]} • 🌐 {row[DataCols.PLATFORM].capitalize()}",
                             unsafe_allow_html=True,
@@ -125,22 +116,14 @@ def run():
                             f"</div>",
                             unsafe_allow_html=True,
                         )
-                        st.markdown(
-                            f"🏷️ {row[DataCols.POST_ID]}", unsafe_allow_html=True
-                        )
+                        st.markdown(f"🏷️ {row[DataCols.POST_ID]}", unsafe_allow_html=True)
 
                     with col_likes:
-                        st.markdown(
-                            f"❤️\n\n{row[DataCols.LIKES]}", unsafe_allow_html=True
-                        )
+                        st.markdown(f"❤️\n\n{row[DataCols.LIKES]}", unsafe_allow_html=True)
 
                     with col_score:
-                        st.markdown(
-                            f"⭐\n\n{row[DataCols.SCORES]}", unsafe_allow_html=True
-                        )
-                    st.markdown(
-                        "<div class='rounded-container'>", unsafe_allow_html=True
-                    )
+                        st.markdown(f"⭐\n\n{row[DataCols.SCORES]}", unsafe_allow_html=True)
+                    st.markdown("<div class='rounded-container'>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
 
 

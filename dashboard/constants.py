@@ -87,12 +87,26 @@ class ColorScheme:
     SECONDARY: str = "gray"
 
     # CSS Variables (for reference)
+    PURPLE_1: str = "var(--purple-1)"
     PURPLE_2: str = "var(--purple-2)"
     PURPLE_3: str = "var(--purple-3)"
+    PURPLE_6: str = "var(--purple-6)"
     PURPLE_7: str = "var(--purple-7)"
     PURPLE_8: str = "var(--purple-8)"
     PURPLE_9: str = "var(--purple-9)"
     PURPLE_11: str = "var(--purple-11)"
+    GRAY_9: str = "var(--gray-9)"
     GRAY_10: str = "var(--gray-10)"
     GRAY_11: str = "var(--gray-11)"
     GRAY_12: str = "var(--gray-12)"
+
+
+@dataclass(frozen=True)
+class PostSimilarityType:
+    """Post Similarity types"""
+
+    SAME = "Same"
+    SIMILAR = "Similar"
+    NEAR = "Near"
+    DIVERSE = "Diverse"
+    DIFFERENT = "Different"
