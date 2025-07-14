@@ -1,39 +1,60 @@
-# 🧠 FeedShift: Rewiring Your Feed
+# 🧠 FeedShift: Rewiring your feed
 
-FeedShift is a cold-start ranking engine designed to help users discover high-quality content in noisy social feeds — even with zero user history.
+FeedShift is an advanced recommendation engine that transforms noisy social feeds into personalized, high-quality content streams - even with minimal user history.
 
-> 🚀 “From chaos to clarity — one post at a time.”
+> 🚀 "From chaos to clarity - one semantically-aware recommendation at a time."
 
 ---
 
-## 🔧 Features
+## 🔧 Key Features
 
-- 📥 Upload raw social media CSV data
-- 📊 Rank posts using content-based similarity (cosine similarity)
-- 📝 View top 10 recommended posts in a Reddit/Facebook-style feed
-- ❤️ Shows likes, authors, post IDs, and timestamps
-- 💡 Modular design for future expansion:
-  - User profile preferences
-  - Toxicity filtering
-  - Topic clustering (BERTopic)
+### Core Ranking Engine
+- 🧠 **Cold-start personalization** with interest-based recommendations
+- 🧪 **Advanced embedding techniques** (Sentence Transformers) for semantic understanding
+- 📊 **Multi-factor scoring**:
+  - Interest relevance (semantic similarity)
+  - Content freshness (time-decay)
+  - Toxicity filtering (Detoxify integration)
+  - Content uniqueness (cluster-based scoring)
+  - Diversity control (user-tunable)
+
+### Dashboard Features
+- 📥 CSV upload with real-time processing
+- 🎚️ Interactive controls:
+  - Toxicity strictness slider
+  - Diversity strength control
+  - Interest selection panel
+- 📊 Visual ranking of top 10 recommended posts
+- ⚡ Real-time updates with debounced processing
+
+### Architecture
+- 🧩 Modular design with clear separation:
+  - Embedding models
+  - Ranking algorithms
+  - UI components
+- 🚀 Optimized for future expansion:
+  - User profile persistence
+  - Real-time APIs
+  - Cross-platform support
 
 ---
 
 ## 📁 Input Format
 
-The input should be a CSV with the following schema:
+The input should be a CSV with the following schema (Reddit-style):
 
 | Column Name | Type     | Description                         |
 |-------------|----------|-------------------------------------|
-| `post_id`   | string   | Unique post ID (`tw_123`, `rd_456`) |
-| `platform`  | string   | Source platform (`twitter`, `reddit`, `blog`) |
-| `text`      | string   | Post content                        |
-| `author`    | string   | Author username (`@user123`)        |
-| `likes`     | integer  | Number of likes                     |
-| `timestamp` | datetime | ISO 8601 timestamp (`YYYY-MM-DDTHH:MM:SSZ`) |
-| `category`  | string   | Topic category (`AI`, `Health`, etc) |
-| `has_image` | boolean  | Whether the post contains an image  |
-| `language`  | string   | Language code (`en`, `es`, etc.)    |
+| `id`        | string   | Unique post ID                      |
+| `title`     | string   | Post title                          |
+| `selftext`  | string   | Post content                        |
+| `author`    | string   | Author username                     |
+| `score`     | integer  | Post score (upvotes)                |
+| `created_utc` | datetime | UTC timestamp (Unix epoch)          |
+| `subreddit` | string   | Subreddit/category                  |
+| `url`       | string   | Post URL                            |
+| `num_comments` | integer  | Number of comments                 |
+| `upvote_ratio` | float    | Upvote ratio (0-1)                  |
 
 ---
 
@@ -41,37 +62,66 @@ The input should be a CSV with the following schema:
 
 1. **Clone the repo**
 ```bash
-git clone https://github.com/your-username/feedshift.git
-cd feedshift
-````
+git clone -b V0.5/recommendations-improvement https://github.com/amitjoshi9627/FeedShift.git
+cd FeedShift
+```
 
 2. **Install dependencies**
-
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Run the Streamlit app**
-
+3. **Run the Reflex dashboard**
 ```bash
-streamlit run app.py
+reflex run
 ```
 
-4. **Upload your CSV and see the magic!** 🧙‍♂️
+4. **Access the dashboard** at `http://localhost:3000`
+
+5. **Upload your CSV** and customize your feed!
+
+---
+
+## 🧩 V0.5 Features
+
+- ✅ **Interest-based personalization** with semantic matching
+- ✅ **Toxicity-aware filtering** with adjustable strictness
+- ✅ **Content uniqueness scoring** using cluster-based algorithms
+- ✅ **Diversity control** with smart similarity adjustments
+- ✅ **Interactive dashboard** with real-time recommendations
+- ✅ **Performance optimizations** for faster ranking
 
 ---
 
 ## 🔮 Roadmap
 
-* [ ] v0.2 – Add user profile preferences (`e.g., prefers AI news`)
-* [ ] v0.3 – Replace mock toxicity filter with  [Detoxify](https://github.com/unitaryai/detoxify)
-* [ ] v0.4 – Use [BERTopic](https://github.com/MaartenGr/BERTopic) for topic-based ranking
+* [ ] v0.6 - Real-time API integration
+* [ ] v0.7 - Chrome extension MVP
+* [ ] v0.8 - Cross-platform user embeddings
+* [ ] v0.9 - Personalized topic discovery
+* [ ] v1.0 - Production deployment pipeline
+
+---
+
+## 🛠️ Development
+
+```bash
+# Set up virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dev dependencies
+pip install -r requirements.txt
+
+# Run with hot reloading
+reflex run
+```
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests and feedback are welcome! Open an issue or submit a PR.
+Contributions are welcome! Please open an issue first to discuss proposed changes.
 
 ---
 
@@ -81,4 +131,4 @@ MIT License. See `LICENSE` file for details.
 
 ---
 
-## ✨ Made with love by [Amit Joshi](https://github.com/amitjoshi9627)
+## ✨ Made with passion by [Amit Joshi](https://github.com/amitjoshi9627)

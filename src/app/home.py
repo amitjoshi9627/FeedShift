@@ -3,7 +3,7 @@ import streamlit as st
 
 from src.app.constants import RECOMMEND_POST_BUTTON, TOXICITY_STRICTNESS
 from src.data.constants import DataCols
-from src.engine.run_engine import FeedShiftEngine
+from src.engine.engine_factory import FeedShiftEngine
 from src.utils.tools import load_csv
 
 
@@ -122,7 +122,10 @@ def run():
                         st.markdown(f"❤️\n\n{row[DataCols.LIKES]}", unsafe_allow_html=True)
 
                     with col_score:
-                        st.markdown(f"⭐\n\n{row[DataCols.SCORES]}", unsafe_allow_html=True)
+                        st.markdown(
+                            f"⭐\n\n{row[DataCols.RECOMMENDATION_SCORE]}",
+                            unsafe_allow_html=True,
+                        )
                     st.markdown("<div class='rounded-container'>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
 

@@ -1,10 +1,15 @@
 import io
 import asyncio
+import os
+from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import reflex as rx
 
-from src.engine.run_engine import FeedShiftEngine
+from src.data.constants import RedditDataCols, DataCols
+from src.engine.constants import Platform
+from src.engine.engine_factory import get_engine
 from dashboard.constants import (
     InterestCategories,
     UIConstants,
@@ -12,11 +17,14 @@ from dashboard.constants import (
     ContentFields,
     ColorScheme,
     PostSimilarityType,
+    UIPath,
 )
+from src.utils.tools import save_csv
 
 
 class FeedShiftState(rx.State):
     data: pd.DataFrame | None = None
+    saved_data_path: str | Path = ""
     uploaded_content: str = ""
     toxicity_strictness: float = DefaultValues.TOXICITY_STRICTNESS
     diversity_strength: float = 0.5  # New diversity parameter
@@ -43,6 +51,7 @@ class FeedShiftState(rx.State):
     def reset_to_initial_state(self):
         """Reset all state to initial values"""
         self.data = None
+        self.saved_data_path = ""
         self.uploaded_content = ""
         self.toxicity_strictness = DefaultValues.TOXICITY_STRICTNESS
         self.diversity_strength = 0.5
@@ -95,9 +104,11 @@ class FeedShiftState(rx.State):
                 self.uploaded_content = self.data.head().to_markdown()
 
                 if self.data is not None:
+                    self.saved_data_path = _add_date_to_path(UIPath.CSV_UPLOAD_PATH)
+                    save_csv(self.data, self.saved_data_path)
                     self.file_upload = True
                     self.ranked_data = get_recommended_posts(
-                        self.data,
+                        self.saved_data_path,
                         self.selected_interests,
                         self.toxicity_strictness,
                         self.diversity_strength,
@@ -192,11 +203,11 @@ class FeedShiftState(rx.State):
                 return
 
             print(
-                f"Processing task {task_id} with toxicity {self.toxicity_strictness} and diversity {self.diversity_strength} with interests {self.selected_interests}"
+                f"Processing task (RE) {task_id} with toxicity {self.toxicity_strictness} and diversity {self.diversity_strength} with interests {self.selected_interests}"
             )
-            # Perform the actual processing with interests and diversity
+
             self.ranked_data = get_recommended_posts(
-                self.data,
+                self.saved_data_path,
                 self.selected_interests,
                 self.toxicity_strictness,
                 self.diversity_strength,
@@ -215,13 +226,26 @@ class FeedShiftState(rx.State):
         self.reset_to_initial_state()
 
 
+def _add_date_to_path(path: str | Path) -> Path:
+    if isinstance(path, str):
+        path = Path(path)
+
+    now = datetime.now()
+    datetime_str = now.strftime(UIConstants.DATE_TIME_FORMAT)
+    os.makedirs(path.parent, exist_ok=True)
+    modified_file_name = f"{path.stem}_{datetime_str}{path.suffix}"
+    path = path.parent / modified_file_name
+
+    return path
+
+
 def get_recommended_posts(
-    data: pd.DataFrame,
+    path: str | Path,
     selected_interests: list[str],
     toxicity_strictness: float,
     diversity_strength: float,
 ) -> pd.DataFrame:
-    engine = FeedShiftEngine(data)
+    engine = get_engine(Platform.REDDIT, path)
     # Pass diversity_strength to the engine - you'll need to modify your engine to accept this parameter
     ranked_data = engine.run(selected_interests, toxicity_strictness, diversity_strength).head(
         UIConstants.TOP_POSTS_LIMIT
@@ -230,13 +254,13 @@ def get_recommended_posts(
 
 
 def upload_zone():
-    """Upload zone that changes size based on upload state"""
+    """Enhanced upload zone with better styling"""
     return rx.center(
         rx.box(
             rx.upload(
                 rx.cond(
                     FeedShiftState.file_upload,
-                    # Compact view after upload - FIXED: Smaller size
+                    # Compact view after upload
                     rx.hstack(
                         rx.icon(
                             "file-check",
@@ -245,7 +269,7 @@ def upload_zone():
                         ),
                         rx.text(
                             "File uploaded",
-                            font_size="0.9em",
+                            font_size="0.95em",
                             font_weight="600",
                             color=ColorScheme.GRAY_12,
                         ),
@@ -264,43 +288,44 @@ def upload_zone():
                         ),
                         align="center",
                         spacing="3",
-                        padding="0.75rem 1rem",
+                        padding="1rem 1.25rem",
                     ),
                     # Full upload view
                     rx.vstack(
                         rx.icon(
                             "cloud-upload",
-                            size=32,
+                            size=36,
                             color=ColorScheme.PURPLE_9,
+                            margin_bottom="0.5rem",
                         ),
                         rx.text(
                             "Drop CSV file here",
-                            font_size="1em",
+                            font_size="1.1em",
                             font_weight="600",
                             color=ColorScheme.GRAY_12,
                         ),
                         rx.text(
                             "or click to browse",
-                            font_size="0.8em",
+                            font_size="0.9em",
                             color=ColorScheme.GRAY_11,
+                            margin_bottom="1rem",
                         ),
                         rx.button(
                             "Choose File",
                             variant="soft",
                             color_scheme=ColorScheme.PRIMARY,
                             size="2",
-                            margin_top="0.5rem",
                             cursor="pointer",
                         ),
                         align="center",
                         spacing="2",
-                        padding="2rem",
+                        padding="2.5rem",
                     ),
                 ),
                 id="file_upload",
                 max_files=UIConstants.MAX_FILES,
                 border=f"2px dashed {ColorScheme.PURPLE_8}",
-                border_radius="12px",
+                border_radius="14px",
                 background=ColorScheme.PURPLE_2,
                 transition="all 0.2s ease",
                 cursor="pointer",
@@ -311,18 +336,18 @@ def upload_zone():
                 },
                 width=rx.cond(
                     FeedShiftState.file_upload,
-                    "auto",  # FIXED: Auto width when uploaded
+                    "auto",
                     "100%",
                 ),
                 min_height=rx.cond(
                     FeedShiftState.file_upload,
-                    "auto",  # FIXED: Auto height when uploaded
+                    "auto",
                     UIConstants.UPLOAD_ZONE_MIN_HEIGHT,
                 ),
             ),
             width=rx.cond(
                 FeedShiftState.file_upload,
-                "auto",  # FIXED: Auto width when uploaded
+                "auto",
                 "100%",
             ),
         ),
@@ -331,27 +356,27 @@ def upload_zone():
 
 
 def interest_selector():
-    """Interest selection component for sidebar - FIXED: Grid layout with larger text"""
+    """Enhanced interest selector with better spacing"""
     return rx.card(
         rx.vstack(
             rx.hstack(
                 rx.icon("heart", size=20, color=ColorScheme.PURPLE_9),
                 rx.text(
                     "Your Interests",
-                    font_size="1.1em",
+                    font_size="1.15em",
                     font_weight="600",
                     color=ColorScheme.GRAY_12,
                 ),
                 align="center",
                 spacing="2",
+                margin_bottom="0.5rem",
             ),
             rx.text(
                 f"Selected: {FeedShiftState.selected_interests.length()}",
-                font_size="0.9em",
+                font_size="0.92em",
                 color=ColorScheme.GRAY_11,
-                margin_bottom="0.5rem",
+                margin_bottom="1rem",
             ),
-            # FIXED: Grid layout for interests instead of vertical
             rx.box(
                 rx.foreach(
                     FeedShiftState.available_interests,
@@ -362,7 +387,7 @@ def interest_selector():
                                 rx.icon("check", size=12),
                                 rx.icon("plus", size=12),
                             ),
-                            rx.text(interest, font_size="0.85em"),
+                            rx.text(interest, font_size="0.88em"),
                             spacing="1",
                             align="center",
                         ),
@@ -377,7 +402,7 @@ def interest_selector():
                             ColorScheme.SECONDARY,
                         ),
                         size="2",
-                        margin="0.1rem",
+                        margin="0.15rem",
                         cursor="pointer",
                         on_click=FeedShiftState.toggle_interest(interest),
                         _hover={"cursor": "pointer"},
@@ -386,38 +411,41 @@ def interest_selector():
                     ),
                 ),
                 display="grid",
-                grid_template_columns="repeat(auto-fit, minmax(110px, 1fr))",
-                gap="0.4rem",
+                grid_template_columns="repeat(auto-fit, minmax(120px, 1fr))",
+                gap="0.5rem",
                 width="100%",
             ),
             spacing="2",
             width="100%",
         ),
         width="100%",
-        margin_bottom="1rem",
+        margin_bottom="1.25rem",
+        padding="1.25rem",
+        box_shadow="0 4px 12px rgba(0,0,0,0.05)",
     )
 
 
 def toxicity_control():
-    """Toxicity control for sidebar"""
+    """Enhanced toxicity control with better spacing"""
     return rx.card(
         rx.vstack(
             rx.hstack(
                 rx.icon("shield-check", size=20, color=ColorScheme.PURPLE_9),
                 rx.text(
                     "Toxicity Filter",
-                    font_size="1.1em",
+                    font_size="1.15em",
                     font_weight="600",
                     color=ColorScheme.GRAY_12,
                 ),
                 align="center",
                 spacing="2",
+                margin_bottom="0.5rem",
             ),
             rx.text(
                 f"Strictness: {FeedShiftState.toxicity_strictness:.2f}",
-                font_size="0.9em",
+                font_size="0.92em",
                 color=ColorScheme.GRAY_11,
-                margin_bottom="0.5rem",
+                margin_bottom="1rem",
             ),
             rx.slider(
                 default_value=[FeedShiftState.toxicity_strictness],
@@ -430,39 +458,43 @@ def toxicity_control():
                 cursor="pointer",
             ),
             rx.hstack(
-                rx.text("Lenient", font_size="0.8em", color=ColorScheme.GRAY_10),
+                rx.text("Lenient", font_size="0.85em", color=ColorScheme.GRAY_10),
                 rx.spacer(),
-                rx.text("Strict", font_size="0.8em", color=ColorScheme.GRAY_10),
+                rx.text("Strict", font_size="0.85em", color=ColorScheme.GRAY_10),
                 width="100%",
+                margin_top="0.5rem",
             ),
             spacing="2",
             width="100%",
         ),
         width="100%",
-        margin_bottom="1rem",
+        margin_bottom="1.25rem",
+        padding="1.25rem",
+        box_shadow="0 4px 12px rgba(0,0,0,0.05)",
     )
 
 
 def diversity_control():
-    """Diversity control for sidebar"""
+    """Enhanced diversity control with better spacing"""
     return rx.card(
         rx.vstack(
             rx.hstack(
                 rx.icon("shuffle", size=20, color=ColorScheme.PURPLE_9),
                 rx.text(
                     "Diversity Control",
-                    font_size="1.1em",
+                    font_size="1.15em",
                     font_weight="600",
                     color=ColorScheme.GRAY_12,
                 ),
                 align="center",
                 spacing="2",
+                margin_bottom="0.5rem",
             ),
             rx.text(
                 f"{FeedShiftState.diversity_label}: {FeedShiftState.diversity_strength:.2f}",
-                font_size="0.9em",
+                font_size="0.92em",
                 color=ColorScheme.GRAY_11,
-                margin_bottom="0.5rem",
+                margin_bottom="1rem",
             ),
             rx.slider(
                 default_value=[FeedShiftState.diversity_strength],
@@ -477,40 +509,43 @@ def diversity_control():
             rx.hstack(
                 rx.text(
                     PostSimilarityType.DIFFERENT,
-                    font_size="0.8em",
+                    font_size="0.85em",
                     color=ColorScheme.GRAY_10,
                 ),
                 rx.spacer(),
                 rx.text(
                     PostSimilarityType.SAME,
-                    font_size="0.8em",
+                    font_size="0.85em",
                     color=ColorScheme.GRAY_10,
                 ),
                 width="100%",
+                margin_top="0.5rem",
             ),
             spacing="2",
             width="100%",
         ),
         width="100%",
-        margin_bottom="1rem",
+        margin_bottom="1.25rem",
+        padding="1.25rem",
+        box_shadow="0 4px 12px rgba(0,0,0,0.05)",
     )
 
 
 def sidebar():
-    """Left sidebar with all controls - always visible"""
+    """Sidebar fixed to the leftmost side"""
     return rx.box(
         rx.vstack(
             rx.hstack(
-                rx.icon("settings", size=22, color=ColorScheme.PURPLE_9),
+                rx.icon("settings", size=24, color=ColorScheme.PURPLE_9),
                 rx.text(
                     "Customize Feed",
-                    font_size="1.2em",
+                    font_size="1.3em",
                     font_weight="700",
                     color=ColorScheme.GRAY_12,
                 ),
                 align="center",
                 spacing="2",
-                margin_bottom="1rem",
+                margin_bottom="1.5rem",
             ),
             interest_selector(),
             toxicity_control(),
@@ -518,15 +553,18 @@ def sidebar():
             spacing="0",
             width="100%",
         ),
-        width="320px",
-        min_width="320px",
+        width="380px",
+        min_width="380px",
         height="fit-content",
-        position="sticky",
+        position="fixed",
         top="2rem",
-        padding="1.2rem",
+        left="2rem",
+        padding="1.5rem",
         background=f"rgba({ColorScheme.PURPLE_1}, 0.3)",
-        border_radius="12px",
+        border_radius="0 16px 16px 0",
         border=f"1px solid {ColorScheme.PURPLE_6}",
+        box_shadow="0 6px 20px rgba(0,0,0,0.08)",
+        z_index="100",
     )
 
 
@@ -556,21 +594,22 @@ def process_button():
                     on_click=FeedShiftState.handle_upload(rx.upload_files("file_upload")),
                     color_scheme=ColorScheme.PRIMARY,
                     size="3",
-                    width="300px",
+                    width="320px",  # Slightly wider
                     disabled=FeedShiftState.is_processing,
                     cursor="pointer",
                     _hover={"cursor": "pointer"},
+                    padding="0.75rem 1.5rem",
                 ),
                 rx.fragment(),
             ),
         ),
         width="100%",
-        margin_top="1rem",
+        margin_top="1.25rem",
     )
 
 
 def processing_overlay():
-    """Show processing spinner when updating recommendations with detailed info"""
+    """Enhanced processing overlay"""
     return rx.cond(
         FeedShiftState.is_processing & FeedShiftState.file_upload,
         rx.center(
@@ -582,31 +621,59 @@ def processing_overlay():
                             "Updating recommendations...",
                             font_weight="600",
                             color=ColorScheme.PURPLE_11,
+                            font_size="1.1em",
                         ),
                         spacing="3",
                         align="center",
                     ),
                     rx.text(
                         FeedShiftState.processing_info,
-                        font_size="0.9em",
+                        font_size="0.95em",
                         color=ColorScheme.GRAY_11,
                         text_align="center",
+                        margin_top="0.5rem",
                     ),
                     spacing="3",
                     align="center",
                 ),
-                padding="1.5rem 2rem",
+                padding="1.75rem 2.5rem",
                 background=ColorScheme.PURPLE_2,
                 border=f"1px solid {ColorScheme.PURPLE_7}",
+                border_radius="14px",
             ),
             width="100%",
-            margin="1rem 0",
+            margin="1.5rem 0",
         ),
         rx.fragment(),
     )
 
 
 def post_card(post, index):
+    """Enhanced post card with better text handling"""
+    content = rx.cond(
+        post.get(ContentFields.CONTENT_FIELDS[0]),
+        post.get(ContentFields.CONTENT_FIELDS[0]),
+        rx.cond(
+            post.get(ContentFields.CONTENT_FIELDS[1]),
+            post.get(ContentFields.CONTENT_FIELDS[1]),
+            ContentFields.FALLBACK_CONTENT,
+        ),
+    )
+
+    author = rx.cond(
+        post.get(ContentFields.AUTHOR_FIELDS[0]),
+        post.get(ContentFields.AUTHOR_FIELDS[0]),
+        rx.cond(
+            post.get(ContentFields.AUTHOR_FIELDS[1]),
+            post.get(ContentFields.AUTHOR_FIELDS[1]),
+            rx.cond(
+                post.get(ContentFields.AUTHOR_FIELDS[2]),
+                post.get(ContentFields.AUTHOR_FIELDS[2]),
+                ContentFields.FALLBACK_AUTHOR,
+            ),
+        ),
+    )
+
     return rx.card(
         rx.vstack(
             rx.hstack(
@@ -614,39 +681,36 @@ def post_card(post, index):
                     index + 1,
                     color_scheme=ColorScheme.PRIMARY,
                     variant="soft",
+                    padding="0.25rem 0.75rem",
+                    font_size="0.9em",
                 ),
                 rx.spacer(),
                 rx.text(
-                    f"🕒 {post.get('timestamp')} • 🌐 {post.get('platform')}",
-                    font_size="14px",
+                    f"🕒 {post.get(RedditDataCols.TIMESTAMP)} • 🌐 {Platform.REDDIT}",
+                    font_size="0.9em",
                     color=ColorScheme.GRAY_11,
                 ),
                 width="100%",
                 align="center",
+                margin_bottom="0.5rem",
             ),
             rx.text(
-                rx.cond(
-                    post.get(ContentFields.CONTENT_FIELDS[0]),
-                    post.get(ContentFields.CONTENT_FIELDS[0]),
-                    rx.cond(
-                        post.get(ContentFields.CONTENT_FIELDS[1]),
-                        post.get(ContentFields.CONTENT_FIELDS[1]),
-                        rx.cond(
-                            post.get(ContentFields.CONTENT_FIELDS[2]),
-                            post.get(ContentFields.CONTENT_FIELDS[2]),
-                            ContentFields.FALLBACK_CONTENT,
-                        ),
-                    ),
-                ),
+                content,
                 color=ColorScheme.GRAY_12,
-                line_height="1.5",
-                font_size="1em",
+                line_height="1.6",
+                font_size="0.95em",  # Slightly smaller font
+                overflow="hidden",
+                text_overflow="ellipsis",
+                max_height="6em",  # Limit height
+                display="-webkit-box",
+                webkit_line_clamp="4",
+                webkit_box_orient="vertical",
             ),
             rx.hstack(
                 rx.text(
                     rx.cond(
-                        post.get("scores"),
-                        f"Score: {post.get('scores')}",
+                        post.get(DataCols.RECOMMENDATION_SCORE),
+                        f"Score: {post.get(DataCols.RECOMMENDATION_SCORE)}",
                         "Score: N/A",
                     ),
                     font_weight="600",
@@ -655,38 +719,33 @@ def post_card(post, index):
                 ),
                 rx.spacer(),
                 rx.text(
-                    rx.cond(
-                        post.get(ContentFields.AUTHOR_FIELDS[0]),
-                        f"Author: {post.get(ContentFields.AUTHOR_FIELDS[0])}",
-                        rx.cond(
-                            post.get(ContentFields.AUTHOR_FIELDS[1]),
-                            f"Author: {post.get(ContentFields.AUTHOR_FIELDS[1])}",
-                            rx.cond(
-                                post.get(ContentFields.AUTHOR_FIELDS[2]),
-                                f"Author: {post.get(ContentFields.AUTHOR_FIELDS[2])}",
-                                ContentFields.FALLBACK_AUTHOR,
-                            ),
-                        ),
-                    ),
+                    f"Author: {author}",
                     color=ColorScheme.GRAY_10,
-                    font_size="0.8em",
+                    font_size="0.85em",
                 ),
                 width="100%",
                 align="center",
+                margin_top="0.75rem",
             ),
             spacing="3",
             align="start",
         ),
-        padding="1.5rem",
-        margin="0.75rem 0",
+        padding="1.75rem",
+        margin="0.85rem 0",
         variant="surface",
         border_left=f"4px solid {ColorScheme.PURPLE_7}",
         width="100%",
+        min_height="180px",
+        _hover={
+            "box_shadow": "0 6px 14px rgba(0,0,0,0.08)",
+            "transform": "translateY(-2px)",
+            "transition": "all 0.2s ease",
+        },
     )
 
 
 def upload_section():
-    """Upload section with full width when no file uploaded"""
+    """Upload section with better spacing"""
     return rx.cond(
         ~FeedShiftState.file_upload,
         rx.center(
@@ -697,13 +756,15 @@ def upload_section():
                         rx.selected_files("file_upload"),
                         color=ColorScheme.PURPLE_11,
                         font_weight="500",
+                        font_size="0.95em",
                     ),
                     width="100%",
+                    margin_top="0.75rem",
                 ),
                 process_button(),
                 spacing="4",
                 width="100%",
-                max_width="600px",
+                max_width="650px",
             ),
             width="100%",
             flex="1",
@@ -713,114 +774,139 @@ def upload_section():
 
 
 def main_content():
-    """Main content area with recommended posts - FIXED: Centered layout with spacing"""
-    return rx.cond(
-        FeedShiftState.file_upload,
-        rx.center(  # FIXED: Center the entire content
-            rx.box(
-                rx.vstack(
-                    upload_zone(),
-                    rx.spacer(height="2rem"),  # FIXED: Add space between upload and posts
-                    rx.hstack(
-                        rx.icon("trending-up", size=28, color=ColorScheme.PURPLE_9),
+    """Main content area with proper alignment after upload"""
+    return rx.box(
+        rx.center(
+            rx.vstack(
+                # Header only shown before upload
+                rx.cond(
+                    ~FeedShiftState.file_upload,
+                    rx.vstack(
+                        rx.image(
+                            src=UIConstants.LOGO_FILENAME,
+                            alt="Feedshift Logo",
+                            height=UIConstants.LOGO_HEIGHT,
+                            object_fit="contain",
+                            margin_bottom="1.5rem",
+                        ),
                         rx.heading(
-                            "Top 10 Recommended Posts",
-                            size="7",
-                            color=ColorScheme.GRAY_12,
+                            "FeedShift Recommendation Engine",
+                            size="5",
+                            color=ColorScheme.PURPLE_11,
+                            margin_bottom="1rem",
+                        ),
+                        rx.text(
+                            "Upload your content CSV to get personalized recommendations",
+                            color=ColorScheme.GRAY_11,
+                            font_size="1.05em",
+                            margin_bottom="2rem",
+                            text_align="center",
                         ),
                         align="center",
-                        spacing="3",
-                        justify="center",  # FIXED: Center the heading
+                        spacing="1",
+                        width="100%",
                     ),
-                    rx.text(
-                        f"Showing top {UIConstants.TOP_POSTS_LIMIT} posts tailored to your preferences",
-                        color=ColorScheme.GRAY_11,
-                        font_size="1em",
-                        margin_bottom="1rem",
-                        text_align="center",  # FIXED: Center the text
-                    ),
-                    processing_overlay(),
-                    rx.cond(
-                        FeedShiftState.ranked_posts.length() > 0,
-                        rx.cond(
-                            ~FeedShiftState.is_processing,
-                            rx.scroll_area(
-                                rx.vstack(
-                                    rx.foreach(FeedShiftState.ranked_posts, post_card),
-                                    spacing="3",
-                                    width="100%",
-                                    align="center",  # FIXED: Center the posts
-                                ),
-                                height="70vh",
-                                scrollbars="vertical",
-                                width="100%",
-                            ),
-                            rx.fragment(),
-                        ),
-                        rx.center(
-                            rx.text(
-                                "No posts available",
-                                color=ColorScheme.GRAY_11,
-                                font_size="1em",
-                            ),
-                            padding="2rem",
-                        ),
-                    ),
-                    spacing="2",
-                    width="100%",
-                    max_width="700px",  # FIXED: Slightly narrower for better alignment
-                    align="center",  # FIXED: Center all items
                 ),
+                # Content area (same for both states)
+                rx.box(
+                    rx.cond(
+                        FeedShiftState.file_upload,
+                        rx.vstack(
+                            upload_zone(),
+                            rx.spacer(height="2.5rem"),
+                            rx.hstack(
+                                rx.icon("trending-up", size=30, color=ColorScheme.PURPLE_9),
+                                rx.heading(
+                                    "Top 10 Recommended Posts",
+                                    size="6",
+                                    color=ColorScheme.GRAY_12,
+                                ),
+                                align="center",
+                                spacing="3",
+                                justify="center",
+                            ),
+                            rx.text(
+                                f"Showing top {UIConstants.TOP_POSTS_LIMIT} posts tailored to your preferences",
+                                color=ColorScheme.GRAY_11,
+                                font_size="1.05em",
+                                margin_bottom="1.25rem",
+                                text_align="center",
+                            ),
+                            processing_overlay(),
+                            rx.cond(
+                                FeedShiftState.ranked_posts.length() > 0,
+                                rx.cond(
+                                    ~FeedShiftState.is_processing,
+                                    rx.scroll_area(
+                                        rx.vstack(
+                                            rx.foreach(FeedShiftState.ranked_posts, post_card),
+                                            spacing="3",
+                                            width="100%",
+                                            align="center",
+                                        ),
+                                        height="70vh",
+                                        scrollbars="vertical",
+                                        width="100%",
+                                        min_width="700px",
+                                    ),
+                                    rx.fragment(),
+                                ),
+                                rx.center(
+                                    rx.text(
+                                        "No posts available",
+                                        color=ColorScheme.GRAY_11,
+                                        font_size="1.1em",
+                                    ),
+                                    padding="2.5rem",
+                                ),
+                            ),
+                            spacing="2",
+                            width="100%",
+                            max_width="800px",
+                            align="center",
+                        ),
+                        upload_section(),
+                    ),
+                    width="100%",
+                ),
+                spacing="4",
+                align="center",
                 width="100%",
-                display="flex",
-                justify_content="center",
-                margin_left="-40px",  # FIXED: Move content slightly left to center with logo
             ),
             width="100%",
-            flex="1",
-        ),
-        upload_section(),
-    )
-
-
-def header():
-    return rx.center(
-        rx.vstack(
-            rx.image(
-                src=UIConstants.LOGO_FILENAME,
-                alt="Feedshift Logo",
-                height=UIConstants.LOGO_HEIGHT,
-                object_fit="contain",
-            ),
-            spacing="4",
-            align="center",
-            margin_bottom="2rem",
         ),
         width="100%",
+        flex="1",
+        # Add left margin to account for fixed sidebar when file is uploaded
+        margin_left=rx.cond(
+            FeedShiftState.file_upload,
+            "700px",  # 380px sidebar width + 40px spacing
+            "0px",
+        ),
+        # Add right padding for balance when file is uploaded
+        padding_right=rx.cond(
+            FeedShiftState.file_upload,
+            "2rem",
+            "0px",
+        ),
     )
 
 
 def index():
     return rx.box(
-        rx.color_mode.button(position="fixed", top="1rem", right="1rem", z_index="999"),
-        rx.vstack(
-            header(),
-            # Main layout with sidebar always visible - full width
-            rx.hstack(
-                sidebar(),
-                main_content(),
-                spacing="2",
-                align="start",
-                width="100%",
-                padding="0 2rem",
-            ),
-            spacing="2",
-            width="100%",
-            max_width="100%",
+        rx.color_mode.button(
+            position="fixed",
+            top="1.25rem",
+            right="1.25rem",
+            z_index="999",
+            size="3",
         ),
+        sidebar(),  # Fixed left sidebar
+        main_content(),
         background=f"radial-gradient(ellipse at top, {ColorScheme.PURPLE_3}, transparent), radial-gradient(ellipse at bottom, {ColorScheme.PURPLE_2}, transparent)",
         min_height="100vh",
         width="100%",
+        padding_top="2rem",
     )
 
 
