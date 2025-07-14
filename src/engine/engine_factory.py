@@ -1,34 +1,21 @@
-from typing import Optional
+from functools import lru_cache
+from pathlib import Path
 
-import pandas as pd
-
-from src.config.paths import RAW_DATA_PATH
-from src.data.constants import RedditDataCols
-from src.data.data_loader import FeedShiftDataLoader, RedditDataLoader, BaseDataLoader
-from src.data.preprocessing import RedditPreprocessor
-from src.ranking.constants import (
-    DEFAULT_TOXICITY_STRICTNESS,
-)
-from src.ranking.ranker import TextRanker
+from src.engine import BaseEngine
+from src.engine.constants import Platform
+from src.engine import RedditEngine
 
 
-class FeedShiftEngine:
-    def __init__(self, path: str = RAW_DATA_PATH) -> None:
-        self.data_loader = RedditDataLoader(path)
-
-    def run(
-        self,
-        interests: list[str],
-        toxicity_strictness: float = DEFAULT_TOXICITY_STRICTNESS,
-        diversity_strength: float = 0.9,
-    ) -> pd.DataFrame:
-        text_ranker = TextRanker(self.data_loader.processed_data, timestamp_col=RedditDataCols.TIMESTAMP, text_col=RedditDataCols.PROCESSED_TITLE)
-        return text_ranker.rerank(interests, toxicity_strictness, diversity_strength=diversity_strength)
-
-
+@lru_cache(maxsize=5)
+def get_engine(platform: str, path: str | Path | None = None):
+    print(f"Yeah we are getting engine for {platform} X {path}")
+    if platform.lower() == "reddit":
+        return RedditEngine(path)
+    else:
+        return BaseEngine(path)
 
 
 if __name__ == "__main__":
-    engine = FeedShiftEngine()
+    engine = get_engine(platform=Platform.REDDIT)
     result = engine.run(interests=["Technology", "Science"]).head()
     print(result)
