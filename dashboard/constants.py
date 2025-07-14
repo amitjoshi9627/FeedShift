@@ -1,5 +1,14 @@
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import List
+
+from src.config.paths import DATA_DIR
+from src.data.constants import RedditDataCols, DataCols
+
+
+@dataclass(frozen=True)
+class UIPath:
+    CSV_UPLOAD_PATH = DATA_DIR / "dashboard/feedshift_data.csv"
 
 
 @dataclass(frozen=True)
@@ -57,6 +66,9 @@ class UIConstants:
     LOGO_HEIGHT: str = "250px"
     LOGO_FILENAME: str = "feedshift_main_logo-removebg.png"
 
+    # Date Time Format for Saving file dynamically
+    DATE_TIME_FORMAT: str = "%Y%m%d_%H%M%S"
+
 
 @dataclass(frozen=True)
 class DefaultValues:
@@ -70,12 +82,12 @@ class DefaultValues:
 
 @dataclass(frozen=True)
 class ContentFields:
-    """Possible field names for content in different data sources"""
+    """Field names for content in different data sources"""
 
-    CONTENT_FIELDS: tuple = ("content", "text", "body")
-    AUTHOR_FIELDS: tuple = ("author", "username", "user")
+    CONTENT_FIELDS: tuple = (DataCols.PROCESSED_TEXT, RedditDataCols.PROCESSED_TITLE)
+    AUTHOR_FIELDS: tuple = (DataCols.AUTHOR, DataCols.USER, DataCols.USERNAME)
     FALLBACK_CONTENT: str = "No content available"
-    FALLBACK_AUTHOR: str = "Author: Unknown"
+    FALLBACK_AUTHOR: str = "Unknown"
 
 
 # Color scheme and styling constants
@@ -101,8 +113,7 @@ class ColorScheme:
     GRAY_12: str = "var(--gray-12)"
 
 
-@dataclass(frozen=True)
-class PostSimilarityType:
+class PostSimilarityType(StrEnum):
     """Post Similarity types"""
 
     SAME = "Same"
