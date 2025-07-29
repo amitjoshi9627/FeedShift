@@ -1,21 +1,20 @@
 from functools import lru_cache
-from pathlib import Path
 
-from src.engine import BaseEngine
+from src.data.constants import SubRedditList
 from src.engine.constants import Platform
 from src.engine import RedditEngine
 
 
 @lru_cache(maxsize=5)
-def get_engine(platform: str, path: str | Path | None = None):
-    print(f"Yeah we are getting engine for {platform} X {path}")
-    if platform.lower() == "reddit":
-        return RedditEngine(path)
+def get_engine(platform: str, subreddit: str):
+    print(f"Yeah we are getting engine for {platform} X {subreddit}")
+    if platform == Platform.REDDIT:
+        return RedditEngine(subreddit)
     else:
-        return BaseEngine(path)
+        raise ValueError(f"Working on getting Engine for {platform}. Sorry :>")
 
 
 if __name__ == "__main__":
-    engine = get_engine(platform=Platform.REDDIT)
-    result = engine.run(interests=["Technology", "Science"]).head()
+    engine = get_engine(platform=Platform.REDDIT, subreddit=SubRedditList.JOKES)
+    result = engine.run().head()
     print(result)
