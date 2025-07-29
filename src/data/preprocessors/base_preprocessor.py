@@ -1,4 +1,5 @@
 import re
+from abc import ABC
 
 import pandas as pd
 
@@ -7,7 +8,7 @@ from src.data.constants import DataCols
 from src.utils.tools import save_csv
 
 
-class BasePreprocessor:
+class BasePreprocessor(ABC):
     def process_data(self, raw_data: pd.DataFrame) -> pd.DataFrame:
         processed_data = raw_data.copy(deep=True).drop_duplicates()
         return self.post_processing(processed_data)

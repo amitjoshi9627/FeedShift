@@ -17,3 +17,6 @@ class RedditPreprocessor(BasePreprocessor):
         processed_data[RedditDataCols.PROCESSED_TITLE] = processed_data[RedditDataCols.TITLE].apply(self.clean_text)
 
         return self.post_processing(processed_data, RedditDataCols.TIMESTAMP)
+
+    def process_text(self, text: str) -> str:
+        return self.clean_text(text)
