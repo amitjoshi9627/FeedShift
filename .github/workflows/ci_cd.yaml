@@ -89,7 +89,7 @@ jobs:
             --tb=short
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-${{ runner.os }}
@@ -130,7 +130,7 @@ jobs:
         python -m tarfile -l dist/*.tar.gz
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: python-package-${{ github.sha }}
         path: dist/
