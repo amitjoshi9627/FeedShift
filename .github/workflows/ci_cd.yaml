@@ -1,4 +1,4 @@
-name: pr-build
+name: FeedShift-CICD
 
 on:
   push:
@@ -100,7 +100,7 @@ jobs:
   package:
     name: Build & Validate Package
     runs-on: ubuntu-latest
-    needs: [lint, test]  # Only run if both lint and test pass
+    needs: [lint, tests]  # Only run if both lint and test pass
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
 
     steps:
