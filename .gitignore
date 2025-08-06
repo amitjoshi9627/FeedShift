@@ -12,6 +12,9 @@ venv/
 .env
 *.ini
 
+#pytest cov
+.coverage
+
 # Data
 .data_cache/raw/
 .data_cache/processed/
