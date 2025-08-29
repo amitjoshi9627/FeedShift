@@ -145,7 +145,7 @@ python -m build
 ## 🛠️ Development Setup
 
 ### **Prerequisites**
-- Python 3.10+
+- Python 3.11+
 - Git
 - Reddit API credentials
 
@@ -192,7 +192,7 @@ twine check dist/*       # Validate package
 ## ✅ Tech Stack
 
 ### **Core Technologies**
-* ⚙️ **Backend**: Python 3.10+ · Reddit API (PRAW) · Pandas · NumPy
+* ⚙️ **Backend**: Python 3.11+ · Reddit API (PRAW) · Pandas · NumPy
 * 📈 **ML/AI**: Sentence Transformers · Detoxify · scikit-learn · Torch
 * 🖥️ **Frontend**: Reflex (React-like UI in Python)
 * 🗄️ **Data**: SQLite · CSV processing · Real-time ingestion
