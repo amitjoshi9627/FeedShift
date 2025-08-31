@@ -8,14 +8,14 @@ on:
   workflow_dispatch:
 
 env:
-  PYTHON_VERSION: "3.10"
+  PYTHON_VERSION: "3.11"
 
 jobs:
   lint:
     name: Code Quality & Linting
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.11"]
         os: [ ubuntu-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -89,7 +89,7 @@ jobs:
             --tb=short
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-${{ runner.os }}
@@ -101,7 +101,6 @@ jobs:
     name: Build & Validate Package
     runs-on: ubuntu-latest
     needs: [lint, tests]  # Only run if both lint and test pass
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
 
     steps:
     - name: Checkout code
@@ -130,7 +129,7 @@ jobs:
         python -m tarfile -l dist/*.tar.gz
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: python-package-${{ github.sha }}
         path: dist/
