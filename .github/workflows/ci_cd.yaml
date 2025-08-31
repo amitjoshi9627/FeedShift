@@ -101,7 +101,6 @@ jobs:
     name: Build & Validate Package
     runs-on: ubuntu-latest
     needs: [lint, tests]  # Only run if both lint and test pass
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
 
     steps:
     - name: Checkout code
