@@ -1,6 +1,6 @@
 pandas>=2.2.3
 numpy>=2.0.1
-torch>=2.8.0
+torch>=2.6.0
 scikit-learn>=1.6.1
 detoxify>=0.5.2
 reflex==0.7.14
@@ -11,3 +11,4 @@ transformers==4.53.0
 sentence-transformers==4.1.0
 httpx>=0.28.1
 pytest>=8.4.1
+pyjwt>=2.9.0
