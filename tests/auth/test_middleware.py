@@ -4,7 +4,8 @@ from src.auth.middleware import auth_middleware
 class TestAuthMiddleware:
     """Test authentication middleware session management."""
 
-    def setup_method(self):
+    @staticmethod
+    def setup_method():
         """Clear session before each test."""
         auth_middleware.clear_session()
 
