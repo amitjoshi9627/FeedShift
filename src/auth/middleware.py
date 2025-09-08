@@ -6,7 +6,7 @@ import threading
 import time
 from typing import Any, Dict, Optional
 
-from .tokens import TokenManager
+from src.auth.tokens import TokenManager
 
 
 class AuthMiddleware:
