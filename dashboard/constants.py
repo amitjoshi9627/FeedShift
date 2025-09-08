@@ -228,44 +228,80 @@ class ContentFields:
 @dataclass(frozen=True)
 class ColorScheme:
     """
-    Color scheme constants for consistent theming throughout the dashboard.
+    Comprehensive color scheme for FeedShift dashboard with authentication support.
 
-    Defines a comprehensive color palette using CSS custom properties
-    for consistent theming and easy theme switching. Colors are organized
-    by semantic meaning and usage context.
-
-    Attributes:
-        PRIMARY: Primary theme color (purple)
-        SECONDARY: Secondary theme color (gray)
-        Various CSS custom property references for specific shades
+    Defines a complete color palette for consistent theming, accessibility,
+    and seamless light/dark mode switching. Includes specific colors for
+    authentication states and user interface elements.
     """
 
     # Base color schemes
     PRIMARY: str = "purple"
     SECONDARY: str = "gray"
 
-    # Success, warning, and error colors
+    # Status colors with specific shades
     SUCCESS: str = "green"
     WARNING: str = "orange"
     ERROR: str = "red"
+    INFO: str = "blue"
 
-    # Purple palette (CSS custom properties)
-    PURPLE_1: str = "var(--purple-1)"  # Lightest purple background
-    PURPLE_2: str = "var(--purple-2)"  # Very light purple
-    PURPLE_3: str = "var(--purple-3)"  # Light purple
-    PURPLE_6: str = "var(--purple-6)"  # Medium purple
-    PURPLE_7: str = "var(--purple-7)"  # Medium-dark purple
-    PURPLE_8: str = "var(--purple-8)"  # Dark purple
-    PURPLE_9: str = "var(--purple-9)"  # Primary purple
-    PURPLE_11: str = "var(--purple-11)"  # Text purple
+    # Purple palette (existing - keep these)
+    PURPLE_1: str = "var(--purple-1)"
+    PURPLE_2: str = "var(--purple-2)"
+    PURPLE_3: str = "var(--purple-3)"
+    PURPLE_6: str = "var(--purple-6)"
+    PURPLE_7: str = "var(--purple-7)"
+    PURPLE_8: str = "var(--purple-8)"
+    PURPLE_9: str = "var(--purple-9)"
+    PURPLE_11: str = "var(--purple-11)"
 
-    # Gray palette (CSS custom properties)
-    GRAY_9: str = "var(--gray-9)"  # Medium gray
-    GRAY_10: str = "var(--gray-10)"  # Medium-dark gray
-    GRAY_11: str = "var(--gray-11)"  # Dark gray
-    GRAY_12: str = "var(--gray-12)"  # Darkest gray (main text)
+    # Gray palette (existing - keep these)
+    GRAY_2: str = "var(--gray-2)"  # NEW: Light gray background
+    GRAY_9: str = "var(--gray-9)"
+    GRAY_10: str = "var(--gray-10)"
+    GRAY_11: str = "var(--gray-11)"
+    GRAY_12: str = "var(--gray-12)"
 
-    # Semantic color mappings
+    # NEW: Green palette for success states
+    GREEN_2: str = "var(--green-2)"  # Light green background
+    GREEN_6: str = "var(--green-6)"  # Green border
+    GREEN_9: str = "var(--green-9)"  # Green icon
+    GREEN_11: str = "var(--green-11)"  # Green text
+
+    # NEW: Red palette for error states
+    RED_2: str = "var(--red-2)"  # Light red background
+    RED_6: str = "var(--red-6)"  # Red border
+    RED_9: str = "var(--red-9)"  # Red icon
+    RED_11: str = "var(--red-11)"  # Red text
+
+    # NEW: Blue palette for info states
+    BLUE_2: str = "var(--blue-2)"  # Light blue background
+    BLUE_6: str = "var(--blue-6)"  # Blue border
+    BLUE_9: str = "var(--blue-9)"  # Blue icon
+    BLUE_11: str = "var(--blue-11)"  # Blue text
+
+    # NEW: Authentication-specific colors
+    AUTH_SUCCESS_BG: str = GREEN_2  # Login success background
+    AUTH_SUCCESS_BORDER: str = GREEN_6  # Login success border
+    AUTH_SUCCESS_TEXT: str = GREEN_11  # "Connected" text color
+    AUTH_ERROR_BG: str = RED_2  # Login error background
+    AUTH_ERROR_BORDER: str = RED_6  # Login error border
+    AUTH_ERROR_TEXT: str = RED_11  # Error message text
+
+    # NEW: Interactive UI states
+    HOVER_OVERLAY: str = "rgba(255, 255, 255, 0.1)"  # Light overlay for hover
+    DISABLED_OVERLAY: str = "rgba(0, 0, 0, 0.3)"  # Dark overlay for disabled
+    SELECTED_BG: str = PURPLE_3  # Selected item background
+    FOCUS_RING: str = PURPLE_9  # Focus outline color
+
+    # NEW: Utility colors
+    WHITE: str = "#ffffff"
+    BLACK: str = "#000000"
+    TRANSPARENT: str = "transparent"
+    OVERLAY_LIGHT: str = "rgba(255, 255, 255, 0.05)"
+    OVERLAY_DARK: str = "rgba(0, 0, 0, 0.05)"
+
+    # Enhanced semantic mappings (existing ones)
     BACKGROUND_PRIMARY: str = PURPLE_1
     BACKGROUND_SECONDARY: str = PURPLE_2
     BORDER_PRIMARY: str = PURPLE_6
@@ -274,6 +310,50 @@ class ColorScheme:
     TEXT_SECONDARY: str = GRAY_11
     TEXT_MUTED: str = GRAY_10
     ACCENT: str = PURPLE_9
+
+    # NEW: Semantic mappings for authentication
+    LOGIN_BUTTON_BG: str = PURPLE_9
+    LOGIN_BUTTON_HOVER: str = PURPLE_8
+    LOGOUT_BUTTON_BG: str = GRAY_9
+    USER_AVATAR_BG: str = PURPLE_6
+    CONNECTION_STATUS_GOOD: str = GREEN_11
+    CONNECTION_STATUS_ERROR: str = RED_11
+
+    # NEW: Component-specific color mappings
+    CARD_BACKGROUND: str = "rgba(var(--purple-1-rgb), 0.3)"
+    CARD_BORDER: str = PURPLE_6
+    CARD_HOVER_SHADOW: str = "rgba(0, 0, 0, 0.08)"
+
+    BUTTON_PRIMARY_BG: str = PURPLE_9
+    BUTTON_PRIMARY_HOVER: str = PURPLE_8
+    BUTTON_SECONDARY_BG: str = GRAY_9
+    BUTTON_SECONDARY_HOVER: str = GRAY_10
+
+    # NEW: Theme-aware colors (for future light/dark mode)
+    @classmethod
+    def get_theme_color(cls, color_name: str, theme: str = "dark") -> str:
+        """
+        Get theme-specific color variant.
+
+        Args:
+            color_name: Base color name
+            theme: 'light' or 'dark'
+
+        Returns:
+            CSS color value appropriate for theme
+        """
+        if theme == "light":
+            # In light mode, adjust certain colors
+            theme_overrides = {
+                "TEXT_PRIMARY": "var(--gray-12)",
+                "TEXT_SECONDARY": "var(--gray-11)",
+                "BACKGROUND_PRIMARY": "var(--purple-1)",
+                "CARD_BACKGROUND": "rgba(var(--purple-1-rgb), 0.8)",
+            }
+            return theme_overrides.get(color_name, getattr(cls, color_name))
+
+        # Default to dark theme colors
+        return getattr(cls, color_name, cls.GRAY_12)
 
 
 class PostSimilarityType(StrEnum):
@@ -408,10 +488,6 @@ def get_similarity_type_from_value(diversity_value: float) -> str:
 
     Returns:
         PostSimilarityType: Corresponding similarity type
-
-    Example:
-        >>> similarity_type = get_similarity_type_from_value(0.3)
-        >>> print(similarity_type)  # PostSimilarityType.DIFFERENT
     """
     if diversity_value < 0.4:
         return PostSimilarityType.DIFFERENT
